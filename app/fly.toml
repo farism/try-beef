@@ -1,0 +1,17 @@
+# fly.toml file generated for aged-fog-9387 on 2022-10-12T16:03:03-07:00
+
+app = "try-beef"
+kill_signal = "SIGINT"
+kill_timeout = 5
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = "80"
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = "443"

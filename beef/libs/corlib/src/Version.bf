@@ -1,0 +1,114 @@
+namespace System
+{
+	struct Version
+	{
+		public uint32 Major;
+		public uint32 Minor;
+		public uint32 Build = 0;
+		public uint32 Revision = 0;
+
+		public this(uint32 major, uint32 minor)
+		{
+			Major = major;
+			Minor = minor;
+		}
+		
+		public this(uint32 major, uint32 minor, uint32 build)
+		{
+			Major = major;
+			Minor = minor;
+			Build = build;
+		}
+
+		public this(uint32 major, uint32 minor, uint32 build, uint32 revision)
+		{
+			Major = major;
+			Minor = minor;
+			Build = build;
+			Revision = revision;
+		}
+
+		public static int operator<=>(Version lhs, Version rhs)
+		{
+			if (lhs.Major != rhs.Major)
+			    if (lhs.Major > rhs.Major)
+			        return 1;
+			    else
+			        return -1;
+
+			if (lhs.Minor != rhs.Minor)
+			    if (lhs.Minor > rhs.Minor)
+			        return 1;
+			    else
+			        return -1;
+
+			if (lhs.Build != rhs.Build)
+			    if (lhs.Build > rhs.Build)
+			        return 1;
+			    else
+			        return -1;
+
+			if (lhs.Revision != rhs.Revision)
+			    if (lhs.Revision > rhs.Revision)
+			        return 1;
+			    else
+			        return -1;
+
+			return 0;
+		}
+
+		public bool Check(uint32 major)
+		{
+			return Major == major;
+		}
+
+		public bool Check(uint32 major, uint32 minor)
+		{
+			return (Major > major) || ((Major == major) && (Minor >= minor));
+		}
+
+		public bool Check(uint32 major, uint32 minor, uint32 build)
+		{
+			return (Major > major) || ((Major == major) && (Minor > minor)) ||
+				((Major == major) && (Minor == minor) && (Build >= build));
+		}
+
+		public bool Check(uint32 major, uint32 minor, uint32 build, uint32 revision)
+		{
+			return (Major > major) || ((Major == major) && (Minor > minor)) ||
+				((Major == major) && (Minor == minor) && (Build > build)) ||
+				((Major == major) && (Minor == minor) && (Build == build) && (Revision >= revision));
+		}
+		
+		public static Result<Version> Parse(StringView version)
+		{
+			var components = version.Split('.');
+
+			mixin ParseComponent(var component)
+			{
+				uint32 parsedComponent;
+				if (!(uint32.Parse(component) case .Ok(out parsedComponent)))
+					return .Err;
+				parsedComponent
+			}
+
+			let major = ParseComponent!(components.GetNext());
+			let minor = ParseComponent!(Try!(components.GetNext()));
+
+			if (!components.HasMore)
+				return Version(major, minor);
+
+			let build = ParseComponent!(components.GetNext());
+
+			if (!components.HasMore)
+				return Version(major, minor, build);
+
+			let revision = ParseComponent!(components.GetNext());
+
+			if (!components.HasMore)
+				return Version(major, minor, build, revision);
+
+			return .Err;
+		}
+	}
+}
