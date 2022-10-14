@@ -1,11 +1,14 @@
+import axios from 'axios'
+import bodyParser from 'body-parser'
 import cors from 'cors'
 import { execa } from 'execa'
 import express from 'express'
-import bodyParser from 'body-parser'
 import ratelimit from 'express-rate-limit'
-import axios from 'axios'
+import { v4 } from 'uuid'
 
-const port = 8081
+const port = process.env.PORT || 8080
+
+const timeout = 10000
 
 const app = express()
 
@@ -20,30 +23,43 @@ app.use(
 )
 
 app.get('/compile?', async (req, res) => {
-  try {
-    if (!req.query.code) {
-      res.send('Invalid code')
-      return
-    }
-
-    // const code = decodeURIComponent(
-    //   Buffer.from(req.query.code, 'base64').toString('ascii')
-    // )
-
-    // console.log({ code })
-
-    const { stdout } = await execa('docker', [
-      'run',
-      '-t',
-      'fae0/beef',
-      req.query.code,
-    ])
-
-    res.send(stdout)
-  } catch (e) {
-    // console.log(e)
-    res.send(e.stdout)
+  if (!req.query.code) {
+    return res.send('Invalid code')
   }
+
+  const name = v4()
+
+  // kill container after 10 sec
+  setTimeout(async () => {
+    const running = await execa('docker', ['ps', '--format', '{{.Names}}'])
+
+    if (running.stdout.includes(name)) {
+      execa('docker', ['kill', name]).catch(() => {})
+
+      res.send('Timed out')
+    }
+  }, timeout)
+
+  execa('docker', [
+    'run',
+    '-t',
+    '--memory',
+    '150mb',
+    '--name',
+    name,
+    'fae0/beef',
+    req.query.code,
+  ])
+    .then((result) => {
+      if (!res.headersSent) {
+        res.send(result.stdout)
+      }
+    })
+    .catch((error) => {
+      if (!res.headersSent) {
+        res.send(error.stdout)
+      }
+    })
 })
 
 app.post('/sprunge/:code', async (req, res) => {

@@ -24,7 +24,7 @@
   }
 
   function endpoint() {
-    return import.meta.env.PROD ? 'https://aged-fog-9387.fly.dev' : 'http://localhost:8081'
+    return import.meta.env.PROD ? 'https://trybeef.fly.dev' : 'http://localhost:8081'
   }
 
   async function compile(code: string) {

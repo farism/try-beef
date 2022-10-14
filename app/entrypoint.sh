@@ -6,4 +6,4 @@ set -e
 
 echo "Running $@"
 
-exec $(node server/index.mjs & (sleep 30 && docker pull fae0/beef) & "$@")
+exec $(node server/index.mjs & (sleep 10 && docker pull fae0/beef) & "$@")
