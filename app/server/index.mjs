@@ -43,6 +43,9 @@ app.get('/compile?', async (req, res) => {
       console.error(e)
     }
   }, timeout)
+
+  const code = decodeURIComponent(atob(req.query.code))
+
   execa('docker', [
     'run',
     '-t',
@@ -51,7 +54,7 @@ app.get('/compile?', async (req, res) => {
     '--name',
     name,
     'fae0/beef',
-    req.query.code,
+    code,
   ])
     .then((result) => {
       if (!res.headersSent) {

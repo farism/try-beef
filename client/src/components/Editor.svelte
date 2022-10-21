@@ -16,15 +16,15 @@
   let Monaco
 
   function encode(str: string) {
-    return btoa(str)
+    return btoa(encodeURIComponent(str))
   }
 
   function decode(str: string) {
-    return atob(str)
+    return decodeURIComponent(atob(str))
   }
 
   function endpoint() {
-    return import.meta.env.PROD ? 'https://trybeef.fly.dev' : 'http://localhost:8080'
+    return import.meta.env.PROD ? 'https://trybeef.fly.dev' : 'http://localhost:8081'
   }
 
   async function compile(code: string) {
