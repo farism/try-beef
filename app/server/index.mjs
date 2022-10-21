@@ -31,15 +31,18 @@ app.get('/compile?', async (req, res) => {
 
   // kill container after 10 sec
   setTimeout(async () => {
-    const running = await execa('docker', ['ps', '--format', '{{.Names}}'])
+    try {
+      const running = await execa('docker', ['ps', '--format', '{{.Names}}'])
 
-    if (running.stdout.includes(name)) {
-      execa('docker', ['kill', name]).catch(() => {})
+      if (running.stdout.includes(name)) {
+        execa('docker', ['kill', name])
 
-      res.send('Timed out')
+        res.send('Timed out')
+      }
+    } catch (e) {
+      console.error(e)
     }
   }, timeout)
-
   execa('docker', [
     'run',
     '-t',
@@ -62,9 +65,9 @@ app.get('/compile?', async (req, res) => {
     })
 })
 
-app.post('/sprunge/:code', async (req, res) => {
+app.post('/sprunge?', async (req, res) => {
   try {
-    const data = new URLSearchParams(`sprunge=${req.params.code}`)
+    const data = new URLSearchParams(`sprunge=${req.query.code}`)
     const sprunge = await axios.post('http://sprunge.us', data)
     res.send(sprunge.data)
   } catch (e) {

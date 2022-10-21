@@ -24,7 +24,7 @@
   }
 
   function endpoint() {
-    return import.meta.env.PROD ? 'https://trybeef.fly.dev' : 'http://localhost:8081'
+    return import.meta.env.PROD ? 'https://trybeef.fly.dev' : 'http://localhost:8080'
   }
 
   async function compile(code: string) {
@@ -46,7 +46,7 @@
   async function updateUrl(code: string) {
     try {
       const host = endpoint()
-      const response = await fetch(`${host}/sprunge/${code}`, { method: 'post' })
+      const response = await fetch(`${host}/sprunge?code=${code}`, { method: 'post' })
       const url = await response.text()
       const id = url.replace('http://sprunge.us/', '')
       window.location.hash = '/' + id
