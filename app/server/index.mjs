@@ -29,6 +29,8 @@ app.get('/compile?', async (req, res) => {
 
   const name = v4()
 
+  const code = btoa(decodeURIComponent(atob(req.query.code)))
+
   // kill container after 10 sec
   setTimeout(async () => {
     try {
@@ -43,8 +45,6 @@ app.get('/compile?', async (req, res) => {
       console.error(e)
     }
   }, timeout)
-
-  const code = decodeURIComponent(atob(req.query.code))
 
   execa('docker', [
     'run',
