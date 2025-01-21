@@ -1,13 +1,22 @@
 <script>
+  import { helloWorld } from '../helloworld'
   import GithubLink from './GithubLink.svelte'
+
+  export let input = ''
+
+  function reset() {
+    input = helloWorld
+    window.location.href = '/'
+  }
 </script>
 
 <header>
   <a href="https://www.beeflang.org/">
     <img src="Beef.png" alt="logo" height="32" />
   </a>
-  <h1>Try Beef</h1>
+  <h1><span class="heading" on:click={reset}>Try Beef</span></h1>
   <div class="spacer" />
+  <button class="reset" on:click={reset}>Reset</button>
   <GithubLink />
 </header>
 
@@ -33,5 +42,29 @@
 
   .spacer {
     flex: 1 1 auto;
+  }
+
+  .heading {
+    cursor: pointer;
+    transition: 0.2s;
+
+    &:hover {
+      color: #ccc;
+      text-decoration: underline;
+    }
+  }
+
+  .reset {
+    background: none;
+    border-radius: 2px;
+    border: 1px solid white;
+    color: white;
+    cursor: pointer;
+    margin-right: 12px;
+    padding: 4px 12px;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
   }
 </style>

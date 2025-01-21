@@ -1,6 +1,6 @@
 FROM teeks99/clang-ubuntu:latest
 RUN apt update && \
-  apt install -y libxml2 libhunspell-dev && \ 
+  apt install -y curl libxml2 libhunspell-dev && \ 
   rm -rf /var/lib/apt/lists/*
 ENV PATH="${PATH}:/beef/bin"
 COPY ./beef /beef

@@ -3,7 +3,7 @@
 </script>
 
 <div class="split">
-  <Splitpanes on:resize>
+  <Splitpanes on:resize theme="">
     <slot />
   </Splitpanes>
 </div>
@@ -14,21 +14,37 @@
   }
 
   .split :global(.splitpanes__pane) {
-    background: inherit;
+    background-color: inherit;
   }
 
   .split :global(.splitpanes__splitter) {
-    background: #333;
+    background-color: #333;
     border-left: none;
     width: 5px;
+    position: relative;
+  }
+
+  .split :global(.splitpanes__splitter)::after {
+    background-color: #666;
+    content: '';
+    height: 30px;
+    left: 2px;
+    left: 50%;
+    margin-left: 2px;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: background-color 0.3s;
+    width: 1px;
   }
 
   .split :global(.splitpanes__splitter:hover) {
-    background: #444;
+    background-color: #444;
   }
 
   .split :global(.splitpanes__splitter:hover:after) {
-    background: #666;
+    background-color: #666;
   }
 
   .split :global(.splitpanes__splitter:before) {
@@ -36,7 +52,7 @@
   }
 
   .split :global(.splitpanes__splitter:after) {
-    background: #666;
+    background-color: #666;
     left: 2px;
     margin: 0;
   }

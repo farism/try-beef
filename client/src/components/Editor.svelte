@@ -6,9 +6,11 @@
   import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
   import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
   import { onMount } from 'svelte'
-  import { helloWorld } from '../helloworld'
+
+  const MICROBIN_URL = 'https://microbin-misty-violet-1746.fly.dev'
 
   export let editor: monaco.editor.IStandaloneCodeEditor
+  export let input: string = ''
   export let output: string = ''
   export let compiling = false
 
@@ -24,16 +26,39 @@
   }
 
   function endpoint() {
-    return import.meta.env.PROD ? 'https://trybeef.fly.dev' : 'http://localhost:8081'
+    return import.meta.env.PROD ? 'https://trybeef.fly.dev' : 'http://localhost:8080'
   }
 
-  async function compile(code: string) {
+  async function post(url: string, data: any) {
+    return await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+  }
+
+  async function upload(code: string) {
+    try {
+      const response = await post(endpoint() + '/upload', { code })
+
+      const id = await response.text()
+
+      window.location.hash = '/' + id
+
+      return id
+    } catch (e) {}
+  }
+
+  async function compile(id: string) {
     compiling = true
 
     const host = endpoint()
 
     try {
-      const res = await fetch(`${host}/compile?code=${code}`)
+      const res = await post(`${host}/compile`, { id })
 
       output = await res.text()
     } catch (e) {
@@ -43,19 +68,7 @@
     compiling = false
   }
 
-  async function updateUrl(code: string) {
-    try {
-      const host = endpoint()
-      const response = await fetch(`${host}/sprunge?code=${code}`, { method: 'post' })
-      const url = await response.text()
-      const id = url.replace('http://sprunge.us/', '')
-      window.location.hash = '/' + id
-    } catch (e) {
-      console.log({ e })
-    }
-  }
-
-  async function initMonaco(value: string = helloWorld) {
+  async function initMonaco(value: string) {
     // @ts-ignore
     self.MonacoEnvironment = {
       getWorker: function (_moduleId: any, label: string) {
@@ -89,38 +102,36 @@
       },
     })
 
-    editor.onKeyDown((e) => {
-      if (e.code === 'F5' || (e.code === 'Enter' && (e.ctrlKey || e.metaKey))) {
+    editor.onKeyDown(async (e) => {
+      if (e.code === 'F5' || ((e.ctrlKey || e.metaKey) && e.code === 'Enter')) {
         e.stopPropagation()
 
         if (!compiling) {
-          const code = encode(editor.getValue())
+          const id = await upload(editor.getValue())
 
-          updateUrl(code)
-
-          compile(code)
+          if (id) {
+            await compile(id)
+          }
         }
       }
     })
   }
 
-  onMount(async () => {
+  onMount(() => {
+    const host = endpoint()
+
     const id = window.location.hash.replace('#/', '').trim()
 
     if (id) {
-      try {
-        const sprunge = await fetch(`${endpoint()}/sprunge/${id}`)
-
-        const code = await sprunge.text()
-
-        if (code) {
-          initMonaco(decode(code))
-        }
-      } catch (e) {
-        initMonaco()
-      }
+      fetch(`${host}/upload/${id}`)
+        .then(async (response) => {
+          initMonaco(await response.text())
+        })
+        .catch(() => {
+          initMonaco(input)
+        })
     } else {
-      initMonaco()
+      initMonaco(input)
     }
 
     function resize() {

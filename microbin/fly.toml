@@ -1,0 +1,39 @@
+# fly.toml app configuration file generated for microbin-misty-violet-1746 on 2025-01-20T13:16:11-08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'microbin-misty-violet-1746'
+primary_region = 'lax'
+kill_signal = 'SIGINT'
+kill_timeout = '5s'
+
+[env]
+  MICROBIN_HIDE_LOGO = true
+  MICROBIN_ADMIN_PASSWORD = 'tryb33f'
+  # MICROBIN_NO_LISTING = true
+  MICROBIN_ETERNAL_PASTA = true
+  MICROBIN_DEFAULT_EXPIRY = 'never'
+  MICROBIN_MAX_FILE_SIZE_ENCRYPTED_MB = 1
+  MICROBIN_MAX_FILE_SIZE_UNENCRYPTED_MB = 1
+
+[experimental]
+  entrypoint = ['microbin', '--highlightsyntax', '--private', '--qr', '--editable', '--enable-burn-after']
+
+[build]
+  image = 'danielszabo99/microbin:latest'
+
+[[mounts]]
+  source = 'microbin_data'
+  destination = '/app/pasta_data'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

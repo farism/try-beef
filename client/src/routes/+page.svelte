@@ -3,9 +3,11 @@
   import { Pane } from 'svelte-splitpanes'
   import Editor from '../components/Editor.svelte'
   import Output from '../components/Output.svelte'
-  import Splitpanes from '../components/Splitpanes.svelte'
+  import SplitPanes from '../components/SplitPanes.svelte'
+  import { helloWorld } from '../helloworld'
 
   let editor: monaco.editor.IStandaloneCodeEditor
+  let input = helloWorld
   let output = 'Enter Beef code to the left and press (F5) or (ctrl + enter) to compile and run'
   let compiling = false
 </script>
@@ -16,14 +18,14 @@
 </svelte:head>
 
 <div class="container">
-  <Splitpanes on:resize={() => editor?.layout()}>
+  <SplitPanes on:resize={() => editor?.layout()}>
     <Pane>
-      <Editor bind:editor bind:output bind:compiling />
+      <Editor bind:editor bind:input bind:output bind:compiling />
     </Pane>
-    <Pane>
+    <Pane class="output">
       <Output bind:output bind:compiling />
     </Pane>
-  </Splitpanes>
+  </SplitPanes>
 </div>
 
 <style>

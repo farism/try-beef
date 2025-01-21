@@ -6,9 +6,9 @@ import express from 'express'
 import ratelimit from 'express-rate-limit'
 import { v4 } from 'uuid'
 
-const port = process.env.PORT || 8080
-
-const timeout = 10000
+const PORT = process.env.PORT || 8080
+const TIMEOUT = 10000
+const MICROBIN_URL = 'https://microbin-misty-violet-1746.fly.dev'
 
 const app = express()
 
@@ -22,14 +22,47 @@ app.use(
   bodyParser.urlencoded({ extended: true })
 )
 
-app.get('/compile?', async (req, res) => {
-  if (!req.query.code) {
-    return res.send('Invalid code')
+app.get('/upload/:id', async (req, res) => {
+  try {
+    const response = await fetch(`${MICROBIN_URL}/raw/${req.params.id}`)
+
+    res.send(await response.text())
+  } catch (e) {
+    res.status(500).send('error')
+  }
+})
+
+app.post('/upload', async (req, res) => {
+  const data = {
+    expiration: 'never',
+    burn_after: 0,
+    syntax_highlight: 'none',
+    privacy: 'public',
+    content: req.body.code,
   }
 
-  const name = v4()
+  const body = new FormData()
 
-  const code = btoa(decodeURIComponent(atob(req.query.code)))
+  Object.entries(data).forEach(([k, v]) => body.append(k, String(v)))
+
+  try {
+    const response = await fetch(`${MICROBIN_URL}/upload`, {
+      method: 'POST',
+      body,
+    })
+
+    const responseUrl = response.url.split('/')
+
+    const id = responseUrl[responseUrl.length - 1]
+
+    res.send(id)
+  } catch (e) {
+    res.status(500).send('error', e.message)
+  }
+})
+
+app.post('/compile', async (req, res) => {
+  const name = v4()
 
   // kill container after 10 sec
   setTimeout(async () => {
@@ -44,7 +77,7 @@ app.get('/compile?', async (req, res) => {
     } catch (e) {
       console.error(e)
     }
-  }, timeout)
+  }, TIMEOUT)
 
   execa('docker', [
     'run',
@@ -54,7 +87,7 @@ app.get('/compile?', async (req, res) => {
     '--name',
     name,
     'fae0/beef',
-    code,
+    req.body.id,
   ])
     .then((result) => {
       if (!res.headersSent) {
@@ -68,25 +101,6 @@ app.get('/compile?', async (req, res) => {
     })
 })
 
-app.post('/sprunge?', async (req, res) => {
-  try {
-    const data = new URLSearchParams(`sprunge=${req.query.code}`)
-    const sprunge = await axios.post('http://sprunge.us', data)
-    res.send(sprunge.data)
-  } catch (e) {
-    res.send('')
-  }
-})
-
-app.get('/sprunge/:id', async (req, res) => {
-  try {
-    const sprunge = await axios.get(`http://sprunge.us/${req.params.id}`)
-    res.send(sprunge.data)
-  } catch (e) {
-    res.send('')
-  }
-})
-
-app.listen(port, () => {
-  console.log(`listening on port ${port}`)
+app.listen(PORT, () => {
+  console.log(`listening on port ${PORT}`)
 })
